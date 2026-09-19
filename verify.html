@@ -74,10 +74,10 @@
 <h1>入站暗号核对工具</h1>
 
 <label>用户提交的暗号：</label>
-<input type="text" id="inputCode" placeholder="例如：BR7-9&DXowC">
+<input type="text" id="inputCode" placeholder="例如：BR7-ABBABBAABA">
 
 <label>用户提交的抽题记录：</label>
-<input type="text" id="inputRecord" placeholder="例如：Q03,Q07,Q12,Q18,Q22,Q25,Q28">
+<input type="text" id="inputRecord" placeholder="例如：Q03,Q07,Q12,Q18,Q22,Q25,Q28,Q31,Q35,Q40">
 
 <button onclick="verify()">核对</button>
 
@@ -85,41 +85,51 @@
 
 <script>
 const questionBank = [
-    { id: "Q01", options: [{code:"7"},{code:"K"},{code:"@"},{code:"m"}], answer: 1 },
-    { id: "Q02", options: [{code:"3"},{code:"#"},{code:"P"},{code:"z"}], answer: 2 },
-    { id: "Q03", options: [{code:"9"},{code:"W"},{code:"$"},{code:"d"}], answer: 0 },
-    { id: "Q04", options: [{code:"2"},{code:"Q"},{code:"!"},{code:"n"}], answer: 2 },
-    { id: "Q05", options: [{code:"8"},{code:"R"},{code:"%"},{code:"f"}], answer: 1 },
-    { id: "Q06", options: [{code:"5"},{code:"T"},{code:"^"},{code:"g"}], answer: 1 },
-    { id: "Q07", options: [{code:"4"},{code:"Y"},{code:"&"},{code:"h"}], answer: 2 },
-    { id: "Q08", options: [{code:"6"},{code:"U"},{code:"*"},{code:"j"}], answer: 2 },
-    { id: "Q09", options: [{code:"1"},{code:"I"},{code:"("},{code:"k"}], answer: 2 },
-    { id: "Q10", options: [{code:"0"},{code:"O"},{code:")"},{code:"l"}], answer: 1 },
-    { id: "Q11", options: [{code:"A"},{code:"S"},{code:"_"},{code:"p"}], answer: 0 },
-    { id: "Q12", options: [{code:"B"},{code:"D"},{code:"-"},{code:"q"}], answer: 1 },
-    { id: "Q13", options: [{code:"C"},{code:"F"},{code:"+"},{code:"r"}], answer: 1 },
-    { id: "Q14", options: [{code:"E"},{code:"G"},{code:"="},{code:"s"}], answer: 1 },
-    { id: "Q15", options: [{code:"H"},{code:"J"},{code:"{"},{code:"t"}], answer: 1 },
-    { id: "Q16", options: [{code:"L"},{code:"M"},{code:"}"},{code:"u"}], answer: 1 },
-    { id: "Q17", options: [{code:"N"},{code:"V"},{code:"["},{code:"v"}], answer: 1 },
-    { id: "Q18", options: [{code:"X"},{code:"Z"},{code:"]"},{code:"w"}], answer: 0 },
-    { id: "Q19", options: [{code:"a"},{code:"b"},{code:":"},{code:"x"}], answer: 1 },
-    { id: "Q20", options: [{code:"c"},{code:"e"},{code:";"},{code:"y"}], answer: 1 },
-    { id: "Q21", options: [{code:"g"},{code:"i"},{code:"<"},{code:"z"}], answer: 1 },
-    { id: "Q22", options: [{code:"o"},{code:"q"},{code:">"},{code:"0"}], answer: 0 },
-    { id: "Q23", options: [{code:"r"},{code:"s"},{code:"?"},{code:"1"}], answer: 1 },
-    { id: "Q24", options: [{code:"t"},{code:"u"},{code:"/"},{code:"2"}], answer: 1 },
-    { id: "Q25", options: [{code:"v"},{code:"w"},{code:"\\"},{code:"3"}], answer: 1 },
-    { id: "Q26", options: [{code:"x"},{code:"y"},{code:"|"},{code:"4"}], answer: 1 },
-    { id: "Q27", options: [{code:"z"},{code:"A"},{code:"}"},{code:"5"}], answer: 1 },
-    { id: "Q28", options: [{code:"B"},{code:"C"},{code:"~"},{code:"6"}], answer: 1 },
-    { id: "Q29", options: [{code:"D"},{code:"E"},{code:"`"},{code:"7"}], answer: 1 },
-    { id: "Q30", options: [{code:"F"},{code:"G"},{code:"€"},{code:"8"}], answer: 0 },
-    { id: "Q31", options: [{code:"H"},{code:"I"},{code:"£"},{code:"9"}], answer: 1 },
-    { id: "Q32", options: [{code:"J"},{code:"K"},{code:"¥"},{code:"0"}], answer: 1 },
-    { id: "Q33", options: [{code:"L"},{code:"M"},{code:"¢"},{code:"1"}], answer: 1 },
-    { id: "Q34", options: [{code:"N"},{code:"O"},{code:"∞"},{code:"2"}], answer: 1 },
-    { id: "Q35", options: [{code:"P"},{code:"Q"},{code:"§"},{code:"3"}], answer: 1 }
+    { id: "Q01", answer: "A" },
+    { id: "Q02", answer: "A" },
+    { id: "Q03", answer: "B" },
+    { id: "Q04", answer: "A" },
+    { id: "Q05", answer: "A" },
+    { id: "Q06", answer: "B" },
+    { id: "Q07", answer: "B" },
+    { id: "Q08", answer: "A" },
+    { id: "Q09", answer: "A" },
+    { id: "Q10", answer: "B" },
+    { id: "Q11", answer: "B" },
+    { id: "Q12", answer: "A" },
+    { id: "Q13", answer: "B" },
+    { id: "Q14", answer: "A" },
+    { id: "Q15", answer: "B" },
+    { id: "Q16", answer: "A" },
+    { id: "Q17", answer: "B" },
+    { id: "Q18", answer: "B" },
+    { id: "Q19", answer: "A" },
+    { id: "Q20", answer: "A" },
+    { id: "Q21", answer: "A" },
+    { id: "Q22", answer: "B" },
+    { id: "Q23", answer: "A" },
+    { id: "Q24", answer: "A" },
+    { id: "Q25", answer: "B" },
+    { id: "Q26", answer: "A" },
+    { id: "Q27", answer: "A" },
+    { id: "Q28", answer: "A" },
+    { id: "Q29", answer: "B" },
+    { id: "Q30", answer: "A" },
+    { id: "Q31", answer: "A" },
+    { id: "Q32", answer: "A" },
+    { id: "Q33", answer: "B" },
+    { id: "Q34", answer: "A" },
+    { id: "Q35", answer: "A" },
+    { id: "Q36", answer: "B" },
+    { id: "Q37", answer: "A" },
+    { id: "Q38", answer: "B" },
+    { id: "Q39", answer: "B" },
+    { id: "Q40", answer: "A" },
+    { id: "Q41", answer: "A" },
+    { id: "Q42", answer: "B" },
+    { id: "Q43", answer: "A" },
+    { id: "Q44", answer: "B" },
+    { id: "Q45", answer: "A" }
 ];
 
 function verify() {
@@ -147,7 +157,7 @@ function verify() {
         if (!q) {
             missing.push(id);
         } else {
-            correctAnswer += q.options[q.answer].code;
+            correctAnswer += q.answer;
         }
     });
 
