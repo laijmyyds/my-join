@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>SCP谜异档案入站验证 - By laijm</title>
+<style>
+    body {
+        font-family: "Noto Serif SC", Georgia, serif;
+        background: #ede9df;
+        color: #4a4640;
+        max-width: 720px;
+        margin: 3em auto;
+        padding: 0 2em;
+        line-height: 1.8;
+    }
+    h1 {
+        font-size: 1.6rem;
+        font-weight: 400;
+        letter-spacing: 0.2em;
+        border-bottom: 1px solid #b8b2a6;
+        padding-bottom: 0.5em;
+        margin-bottom: 1.5em;
+    }
+    .question {
+        margin-bottom: 2em;
+        padding-bottom: 1.5em;
+        border-bottom: 1px solid #d4cfc4;
+    }
+    .question-title {
+        font-weight: 500;
+        margin-bottom: 0.8em;
+    }
+    .option {
+        display: block;
+        margin: 0.4em 0;
+        cursor: pointer;
+        padding: 0.3em 0.5em;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+    }
+    .option:hover {
+        background: rgba(184, 178, 166, 0.1);
+        border-color: #d4cfc4;
+    }
+    .option input {
+        margin-right: 0.6em;
+    }
+    #result {
+        margin-top: 2em;
+        padding: 1em;
+        background: #f5f1e8;
+        border: 1px solid #b8b2a6;
+        display: none;
+    }
+    #result.show {
+        display: block;
+    }
+    #result .code {
+        font-family: "Recursive", Consolas, monospace;
+        font-size: 1.4rem;
+        letter-spacing: 0.15em;
+        color: #a0522d;
+        text-align: center;
+        padding: 1em 0;
+        border: 1px dashed #b8b2a6;
+        margin: 1em 0;
+        word-break: break-all;
+    }
+    #result .record {
+        font-family: "Recursive", Consolas, monospace;
+        font-size: 0.9rem;
+        color: #7a756c;
+        text-align: center;
+        padding: 0.5em 0;
+        border: 1px dashed #d4cfc4;
+        margin: 0.5em 0;
+        word-break: break-all;
+    }
+    button {
+        font-family: "Inter", sans-serif;
+        padding: 0.6em 2em;
+        background: transparent;
+        border: 1px solid #b8b2a6;
+        color: #4a4640;
+        cursor: pointer;
+        letter-spacing: 0.1em;
+        transition: all 0.2s ease;
+    }
+    button:hover {
+        background: #f5f1e8;
+        border-color: #8c887e;
+    }
+    .note {
+        font-size: 0.85rem;
+        color: #7a756c;
+        margin-top: 1em;
+    }
+    .copy-btn {
+        font-size: 0.75rem;
+        padding: 0.3em 0.8em;
+        margin-left: 0.5em;
+        vertical-align: middle;
+    }
+    .admin-panel {
+        margin-top: 3em;
+        padding: 1em;
+        background: #e0dcd2;
+        border: 1px solid #b8b2a6;
+        font-size: 0.85rem;
+        display: none;
+    }
+    .admin-panel h2 {
+        font-size: 1rem;
+        font-weight: 500;
+        margin-top: 0;
+    }
+    .admin-panel code {
+        font-family: "Recursive", Consolas, monospace;
+        background: #f5f1e8;
+        padding: 0.1em 0.4em;
+    }
+</style>
+</head>
+<body>
+
+<h1>入站验证</h1>
+
+<p>请回答以下7道题。每道题的答案对应一个字符，按顺序组合后形成你的入站暗号。</p>
+<p class="note">注意：题目和选项顺序每次刷新都会随机变化。请认真阅读站规和世界观后再作答。</p>
+
+<div id="quiz"></div>
+
+<button onclick="checkAnswers()">提交答案</button>
+
+<div id="result">
+    <p>你的入站暗号是：</p>
+    <div class="code" id="codeOutput"></div>
+    <p>抽题记录（请与暗号一起提交）：</p>
+    <div class="record" id="recordOutput"></div>
+    <p class="note">请将暗号和抽题记录一起填入入站申请，或私信给站务人员。职员核对时会忽略暗号前缀。</p>
+</div>
+
+<div class="admin-panel" id="adminPanel">
+    <h2>管理员核对面板</h2>
+    <p>本次抽题：<code id="adminQuestions"></code></p>
+    <p>正确答案序列（不含前缀）：<code id="adminAnswer"></code></p>
+    <p class="note">此面板仅供管理员使用。如果不想公开，请在代码中删除 <code>#adminPanel</code> 相关的 HTML 和 JS。</p>
+</div>
+
+<script>
+const questionBank = [
+    {
+        id: "Q01",
+        q: "本站的入站申请中，以下哪种行为是明确禁止的？",
+        options: [
+            { text: "在讨论区友好交流", code: "7" },
+            { text: "泄露个人信息或身份", code: "K" },
+            { text: "为文章添加合适的标签", code: "@" },
+            { text: "在沙盒中打草稿", code: "m" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q02",
+        q: "如果你在站内看到一篇包含成人内容的文章，应该怎么做？",
+        options: [
+            { text: "直接举报并删除", code: "3" },
+            { text: "忽略它，继续浏览", code: "#" },
+            { text: "提醒作者添加「成人内容」标签", code: "P" },
+            { text: "在评论区批评作者", code: "z" }
+        ],
+        answer: 2
+    },
+    {
+        id: "Q03",
+        q: "以下哪种行为属于「低龄幼稚」？",
+        options: [
+            { text: "在文章中使用大量网络热梗", code: "9" },
+            { text: "在讨论区提出建设性意见", code: "W" },
+            { text: "为文章添加合适的标签", code: "$" },
+            { text: "在沙盒中练习写作", code: "d" }
+        ],
+        answer: 0
+    },
+    {
+        id: "Q04",
+        q: "本站对「角色扮演」的态度是？",
+        options: [
+            { text: "鼓励在讨论区进行角色扮演", code: "2" },
+            { text: "允许在文章中进行角色扮演", code: "Q" },
+            { text: "严禁在社区讨论中进行角色扮演", code: "!" },
+            { text: "仅在特定版块允许", code: "n" }
+        ],
+        answer: 2
+    },
+    {
+        id: "Q05",
+        q: "如果你对职员的处理有异议，应该怎么做？",
+        options: [
+            { text: "在讨论区公开质疑", code: "8" },
+            { text: "私信站长或管理员提出复核申请", code: "R" },
+            { text: "直接无视职员的操作", code: "%" },
+            { text: "在文章评论区发泄", code: "f" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q06",
+        q: "本站的文章授权协议是？",
+        options: [
+            { text: "CC BY-NC-ND", code: "5" },
+            { text: "CC BY-SA", code: "T" },
+            { text: "MIT", code: "^" },
+            { text: "GPL", code: "g" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q07",
+        q: "以下哪种内容会被直接删除且不会有备份？",
+        options: [
+            { text: "包含成人内容的文章", code: "4" },
+            { text: "涉及政治敏感的文章", code: "Y" },
+            { text: "宣扬邪教、反人类、极端主义的文章", code: "&" },
+            { text: "包含暴力描写的文章", code: "h" }
+        ],
+        answer: 2
+    },
+    {
+        id: "Q08",
+        q: "在站内进行编辑时，以下哪种做法是正确的？",
+        options: [
+            { text: "随意搬运其他作者的文章", code: "6" },
+            { text: "不标注来源地抄袭", code: "U" },
+            { text: "遵循 CC BY-SA 协议使用图像", code: "*" },
+            { text: "随意修改他人的文章", code: "j" }
+        ],
+        answer: 2
+    },
+    {
+        id: "Q09",
+        q: "如果你在站内收到陌生人的私信链接，应该怎么做？",
+        options: [
+            { text: "直接点击查看", code: "1" },
+            { text: "转发给其他成员", code: "I" },
+            { text: "不要点击，并联系站务人员", code: "(" },
+            { text: "回复对方询问详情", code: "k" }
+        ],
+        answer: 2
+    },
+    {
+        id: "Q10",
+        q: "本站对「水贴」的态度是？",
+        options: [
+            { text: "允许在讨论区水贴", code: "0" },
+            { text: "禁止在社群讨论中进行水贴、钓鱼、洗板", code: "O" },
+            { text: "仅在水区允许", code: ")" },
+            { text: "视情况而定", code: "l" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q11",
+        q: "以下哪种行为会被视为「不成熟」？",
+        options: [
+            { text: "在讨论区进行角色扮演", code: "A" },
+            { text: "认真阅读站规", code: "S" },
+            { text: "为文章添加合适的标签", code: "_" },
+            { text: "在沙盒中练习写作", code: "p" }
+        ],
+        answer: 0
+    },
+    {
+        id: "Q12",
+        q: "如果你发现自己的文章被抄袭，应该怎么做？",
+        options: [
+            { text: "直接删除对方的文章", code: "B" },
+            { text: "联系站务人员并提供证据", code: "D" },
+            { text: "在讨论区公开指责", code: "-" },
+            { text: "无视它", code: "q" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q13",
+        q: "本站对「成人内容」的处理方式是？",
+        options: [
+            { text: "直接删除", code: "C" },
+            { text: "提醒作者添加标签", code: "F" },
+            { text: "允许但不标注", code: "+" },
+            { text: "视情况而定", code: "r" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q14",
+        q: "以下哪种行为属于「骚扰」？",
+        options: [
+            { text: "在讨论区提出不同意见", code: "E" },
+            { text: "反复私信骚扰他人", code: "G" },
+            { text: "为文章评分", code: "=" },
+            { text: "在沙盒中练习写作", code: "s" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q15",
+        q: "本站对「政治内容」的态度是？",
+        options: [
+            { text: "允许讨论", code: "H" },
+            { text: "禁止涉及敏感政治话题", code: "J" },
+            { text: "仅允许在特定版块", code: "{" },
+            { text: "视情况而定", code: "t" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q16",
+        q: "如果你在站内看到一篇质量很差的文章，应该怎么做？",
+        options: [
+            { text: "在评论区辱骂作者", code: "L" },
+            { text: "给出建设性意见或直接离开", code: "M" },
+            { text: "直接举报", code: "}" },
+            { text: "转发到其他群组嘲笑", code: "u" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q17",
+        q: "本站对「开盒」的态度是？",
+        options: [
+            { text: "允许在特定情况下", code: "N" },
+            { text: "严禁泄露他人个人信息", code: "V" },
+            { text: "视情况而定", code: "[" },
+            { text: "不干涉", code: "v" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q18",
+        q: "以下哪种行为属于「钓鱼」？",
+        options: [
+            { text: "故意发布争议性内容引战", code: "X" },
+            { text: "认真讨论文章内容", code: "Z" },
+            { text: "为文章添加标签", code: "]" },
+            { text: "在沙盒中练习写作", code: "w" }
+        ],
+        answer: 0
+    },
+    {
+        id: "Q19",
+        q: "本站对「洗板」的态度是？",
+        options: [
+            { text: "允许在讨论区洗板", code: "a" },
+            { text: "禁止短时间内反复发帖", code: "b" },
+            { text: "仅在水区允许", code: ":" },
+            { text: "视情况而定", code: "x" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q20",
+        q: "如果你对站规有疑问，应该怎么做？",
+        options: [
+            { text: "直接无视站规", code: "c" },
+            { text: "私信站务人员询问", code: "e" },
+            { text: "在讨论区公开质疑", code: ";" },
+            { text: "自行解释", code: "y" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q21",
+        q: "本站对「抄袭」的态度是？",
+        options: [
+            { text: "允许在标注来源的情况下搬运", code: "g" },
+            { text: "禁止一切形式的抄袭", code: "i" },
+            { text: "视情况而定", code: "<" },
+            { text: "不干涉", code: "z" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q22",
+        q: "以下哪种行为属于「成熟」的表现？",
+        options: [
+            { text: "在讨论区理性交流", code: "o" },
+            { text: "在评论区辱骂他人", code: "q" },
+            { text: "在站内进行角色扮演", code: ">" },
+            { text: "随意泄露他人信息", code: "0" }
+        ],
+        answer: 0
+    },
+    {
+        id: "Q23",
+        q: "本站对「图片使用」的要求是？",
+        options: [
+            { text: "随意使用网络图片", code: "r" },
+            { text: "遵循 CC BY-SA 协议", code: "s" },
+            { text: "不需要标注来源", code: "?" },
+            { text: "视情况而定", code: "1" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q24",
+        q: "如果你在站内看到一篇违规文章，应该怎么做？",
+        options: [
+            { text: "直接删除", code: "t" },
+            { text: "联系站务人员处理", code: "u" },
+            { text: "在评论区批评", code: "/" },
+            { text: "无视它", code: "2" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q25",
+        q: "本站对「未成年人」的态度是？",
+        options: [
+            { text: "禁止未成年人入站", code: "v" },
+            { text: "欢迎低龄创作者，但要求行为成熟", code: "w" },
+            { text: "视情况而定", code: "\\" },
+            { text: "不干涉", code: "3" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q26",
+        q: "以下哪种行为属于「不尊重职员」？",
+        options: [
+            { text: "私信职员询问问题", code: "x" },
+            { text: "在讨论区公开辱骂职员", code: "y" },
+            { text: "为文章评分", code: "|" },
+            { text: "在沙盒中练习写作", code: "4" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q27",
+        q: "本站对「讨论区图片」的要求是？",
+        options: [
+            { text: "可以直接发布", code: "z" },
+            { text: "需要折叠", code: "A" },
+            { text: "禁止发布", code: "}" },
+            { text: "视情况而定", code: "5" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q28",
+        q: "如果你在站内看到一篇包含敏感政治内容的文章，应该怎么做？",
+        options: [
+            { text: "直接删除", code: "B" },
+            { text: "联系站务人员处理", code: "C" },
+            { text: "在评论区讨论", code: "~" },
+            { text: "无视它", code: "6" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q29",
+        q: "本站对「恶意评分」的态度是？",
+        options: [
+            { text: "允许自由评分", code: "D" },
+            { text: "禁止恶意刷低分", code: "E" },
+            { text: "视情况而定", code: "`" },
+            { text: "不干涉", code: "7" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q30",
+        q: "以下哪种行为属于「建设性意见」？",
+        options: [
+            { text: "在评论区指出文章的具体问题", code: "F" },
+            { text: "在评论区辱骂作者", code: "G" },
+            { text: "在讨论区水贴", code: "€" },
+            { text: "在站内进行角色扮演", code: "8" }
+        ],
+        answer: 0
+    },
+    {
+        id: "Q31",
+        q: "本站对「标签」的要求是？",
+        options: [
+            { text: "可以随意添加", code: "H" },
+            { text: "必须符合标签规则", code: "I" },
+            { text: "不需要添加", code: "£" },
+            { text: "视情况而定", code: "9" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q32",
+        q: "如果你发现站内有成员泄露他人信息，应该怎么做？",
+        options: [
+            { text: "直接删除该成员的文章", code: "J" },
+            { text: "立即联系站务人员", code: "K" },
+            { text: "在讨论区公开指责", code: "¥" },
+            { text: "无视它", code: "0" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q33",
+        q: "本站对「跨站搬运」的要求是？",
+        options: [
+            { text: "可以随意搬运", code: "L" },
+            { text: "必须标注来源并遵循协议", code: "M" },
+            { text: "禁止一切搬运", code: "¢" },
+            { text: "视情况而定", code: "1" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q34",
+        q: "以下哪种行为属于「破坏社区氛围」？",
+        options: [
+            { text: "在讨论区理性交流", code: "N" },
+            { text: "在评论区引战", code: "O" },
+            { text: "为文章添加标签", code: "∞" },
+            { text: "在沙盒中练习写作", code: "2" }
+        ],
+        answer: 1
+    },
+    {
+        id: "Q35",
+        q: "本站对「站规」的最终解释权归？",
+        options: [
+            { text: "所有成员", code: "P" },
+            { text: "站务人员", code: "Q" },
+            { text: "站长个人", code: "§" },
+            { text: "无需解释", code: "3" }
+        ],
+        answer: 1
+    }
+];
+
+const QUESTION_COUNT = 7;
+
+function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function pickQuestions() {
+    return shuffle(questionBank).slice(0, QUESTION_COUNT);
+}
+
+function generatePrefix() {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const len = 2 + Math.floor(Math.random() * 3);
+    let prefix = "";
+    for (let i = 0; i < len; i++) {
+        prefix += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return prefix;
+}
+
+const selectedQuestions = pickQuestions();
+const prefix = generatePrefix();
+
+function renderQuiz() {
+    const container = document.getElementById("quiz");
+    container.innerHTML = "";
+    selectedQuestions.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "question";
+
+        const title = document.createElement("div");
+        title.className = "question-title";
+        title.textContent = `${index + 1}. ${item.q}`;
+        div.appendChild(title);
+
+        const shuffledOptions = shuffle(item.options);
+
+        shuffledOptions.forEach((opt) => {
+            const label = document.createElement("label");
+            label.className = "option";
+            const input = document.createElement("input");
+            input.type = "radio";
+            input.name = `q${index}`;
+            input.value = opt.code;
+            input.dataset.correct = (opt.code === item.options[item.answer].code) ? "1" : "0";
+            label.appendChild(input);
+            label.appendChild(document.createTextNode(opt.text));
+            div.appendChild(label);
+        });
+
+        container.appendChild(div);
+    });
+}
+
+renderQuiz();
+
+function checkAnswers() {
+    const resultDiv = document.getElementById("result");
+    const codeOutput = document.getElementById("codeOutput");
+    const recordOutput = document.getElementById("recordOutput");
+    let code = "";
+    let allAnswered = true;
+
+    selectedQuestions.forEach((item, index) => {
+        const radios = document.getElementsByName(`q${index}`);
+        let selected = null;
+        for (const r of radios) {
+            if (r.checked) {
+                selected = r;
+                break;
+            }
+        }
+        if (!selected) {
+            allAnswered = false;
+            code += "?";
+        } else {
+            code += selected.value;
+        }
+    });
+
+    if (!allAnswered) {
+        alert("请回答所有问题。");
+        return;
+    }
+
+    const fullCode = prefix + "-" + code;
+    codeOutput.textContent = fullCode;
+
+    const record = selectedQuestions.map(item => item.id).join(",");
+    recordOutput.textContent = record;
+
+    resultDiv.classList.add("show");
+    resultDiv.scrollIntoView({ behavior: "smooth" });
+}
+</script>
+
+</body>
+</html>
