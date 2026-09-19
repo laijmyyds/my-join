@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>SCP谜异档案入站暗号核对工具 - By laijm</title>
+<style>
+    body {
+        font-family: "Noto Serif SC", Georgia, serif;
+        background: #ede9df;
+        color: #4a4640;
+        max-width: 640px;
+        margin: 3em auto;
+        padding: 0 2em;
+        line-height: 1.8;
+    }
+    h1 {
+        font-size: 1.4rem;
+        font-weight: 400;
+        letter-spacing: 0.2em;
+        border-bottom: 1px solid #b8b2a6;
+        padding-bottom: 0.5em;
+        margin-bottom: 1.5em;
+    }
+    label {
+        display: block;
+        margin-top: 1em;
+        font-weight: 500;
+    }
+    input[type="text"] {
+        width: 100%;
+        padding: 0.5em;
+        font-family: "Recursive", Consolas, monospace;
+        font-size: 1rem;
+        border: 1px solid #b8b2a6;
+        background: #f5f1e8;
+        color: #4a4640;
+        box-sizing: border-box;
+    }
+    button {
+        margin-top: 1.5em;
+        padding: 0.6em 2em;
+        background: transparent;
+        border: 1px solid #b8b2a6;
+        color: #4a4640;
+        cursor: pointer;
+        letter-spacing: 0.1em;
+        transition: all 0.2s ease;
+    }
+    button:hover {
+        background: #f5f1e8;
+        border-color: #8c887e;
+    }
+    #result {
+        margin-top: 2em;
+        padding: 1em;
+        border: 1px solid #b8b2a6;
+        background: #f5f1e8;
+        display: none;
+    }
+    #result.show {
+        display: block;
+    }
+    .pass { color: #2a7a2a; font-weight: 500; }
+    .fail { color: #a02a2a; font-weight: 500; }
+    .mono {
+        font-family: "Recursive", Consolas, monospace;
+        letter-spacing: 0.15em;
+        word-break: break-all;
+    }
+</style>
+</head>
+<body>
+
+<h1>入站暗号核对工具</h1>
+
+<label>用户提交的暗号：</label>
+<input type="text" id="inputCode" placeholder="例如：BR7-9&DXowC">
+
+<label>用户提交的抽题记录：</label>
+<input type="text" id="inputRecord" placeholder="例如：Q03,Q07,Q12,Q18,Q22,Q25,Q28">
+
+<button onclick="verify()">核对</button>
+
+<div id="result"></div>
+
+<script>
+const questionBank = [
+    { id: "Q01", options: [{code:"7"},{code:"K"},{code:"@"},{code:"m"}], answer: 1 },
+    { id: "Q02", options: [{code:"3"},{code:"#"},{code:"P"},{code:"z"}], answer: 2 },
+    { id: "Q03", options: [{code:"9"},{code:"W"},{code:"$"},{code:"d"}], answer: 0 },
+    { id: "Q04", options: [{code:"2"},{code:"Q"},{code:"!"},{code:"n"}], answer: 2 },
+    { id: "Q05", options: [{code:"8"},{code:"R"},{code:"%"},{code:"f"}], answer: 1 },
+    { id: "Q06", options: [{code:"5"},{code:"T"},{code:"^"},{code:"g"}], answer: 1 },
+    { id: "Q07", options: [{code:"4"},{code:"Y"},{code:"&"},{code:"h"}], answer: 2 },
+    { id: "Q08", options: [{code:"6"},{code:"U"},{code:"*"},{code:"j"}], answer: 2 },
+    { id: "Q09", options: [{code:"1"},{code:"I"},{code:"("},{code:"k"}], answer: 2 },
+    { id: "Q10", options: [{code:"0"},{code:"O"},{code:")"},{code:"l"}], answer: 1 },
+    { id: "Q11", options: [{code:"A"},{code:"S"},{code:"_"},{code:"p"}], answer: 0 },
+    { id: "Q12", options: [{code:"B"},{code:"D"},{code:"-"},{code:"q"}], answer: 1 },
+    { id: "Q13", options: [{code:"C"},{code:"F"},{code:"+"},{code:"r"}], answer: 1 },
+    { id: "Q14", options: [{code:"E"},{code:"G"},{code:"="},{code:"s"}], answer: 1 },
+    { id: "Q15", options: [{code:"H"},{code:"J"},{code:"{"},{code:"t"}], answer: 1 },
+    { id: "Q16", options: [{code:"L"},{code:"M"},{code:"}"},{code:"u"}], answer: 1 },
+    { id: "Q17", options: [{code:"N"},{code:"V"},{code:"["},{code:"v"}], answer: 1 },
+    { id: "Q18", options: [{code:"X"},{code:"Z"},{code:"]"},{code:"w"}], answer: 0 },
+    { id: "Q19", options: [{code:"a"},{code:"b"},{code:":"},{code:"x"}], answer: 1 },
+    { id: "Q20", options: [{code:"c"},{code:"e"},{code:";"},{code:"y"}], answer: 1 },
+    { id: "Q21", options: [{code:"g"},{code:"i"},{code:"<"},{code:"z"}], answer: 1 },
+    { id: "Q22", options: [{code:"o"},{code:"q"},{code:">"},{code:"0"}], answer: 0 },
+    { id: "Q23", options: [{code:"r"},{code:"s"},{code:"?"},{code:"1"}], answer: 1 },
+    { id: "Q24", options: [{code:"t"},{code:"u"},{code:"/"},{code:"2"}], answer: 1 },
+    { id: "Q25", options: [{code:"v"},{code:"w"},{code:"\\"},{code:"3"}], answer: 1 },
+    { id: "Q26", options: [{code:"x"},{code:"y"},{code:"|"},{code:"4"}], answer: 1 },
+    { id: "Q27", options: [{code:"z"},{code:"A"},{code:"}"},{code:"5"}], answer: 1 },
+    { id: "Q28", options: [{code:"B"},{code:"C"},{code:"~"},{code:"6"}], answer: 1 },
+    { id: "Q29", options: [{code:"D"},{code:"E"},{code:"`"},{code:"7"}], answer: 1 },
+    { id: "Q30", options: [{code:"F"},{code:"G"},{code:"€"},{code:"8"}], answer: 0 },
+    { id: "Q31", options: [{code:"H"},{code:"I"},{code:"£"},{code:"9"}], answer: 1 },
+    { id: "Q32", options: [{code:"J"},{code:"K"},{code:"¥"},{code:"0"}], answer: 1 },
+    { id: "Q33", options: [{code:"L"},{code:"M"},{code:"¢"},{code:"1"}], answer: 1 },
+    { id: "Q34", options: [{code:"N"},{code:"O"},{code:"∞"},{code:"2"}], answer: 1 },
+    { id: "Q35", options: [{code:"P"},{code:"Q"},{code:"§"},{code:"3"}], answer: 1 }
+];
+
+function verify() {
+    const inputCode = document.getElementById("inputCode").value.trim();
+    const inputRecord = document.getElementById("inputRecord").value.trim();
+    const resultDiv = document.getElementById("result");
+
+    if (!inputCode || !inputRecord) {
+        resultDiv.innerHTML = '<p class="fail">请填写暗号和抽题记录。</p>';
+        resultDiv.classList.add("show");
+        return;
+    }
+
+    let answerPart = inputCode;
+    if (inputCode.includes("-")) {
+        answerPart = inputCode.split("-").slice(1).join("-");
+    }
+
+    const ids = inputRecord.split(",").map(s => s.trim().toUpperCase());
+
+    let correctAnswer = "";
+    let missing = [];
+    ids.forEach(id => {
+        const q = questionBank.find(item => item.id === id);
+        if (!q) {
+            missing.push(id);
+        } else {
+            correctAnswer += q.options[q.answer].code;
+        }
+    });
+
+    let html = "";
+    html += `<p>用户答案序列：<span class="mono">${answerPart}</span></p>`;
+    html += `<p>正确答序列：<span class="mono">${correctAnswer}</span></p>`;
+
+    if (missing.length > 0) {
+        html += `<p class="fail">找不到以下题号：${missing.join(", ")}</p>`;
+    }
+
+    if (answerPart === correctAnswer && missing.length === 0) {
+        html += `<p class="pass">通过</p>`;
+    } else {
+        html += `<p class="fail">不通过</p>`;
+    }
+
+    resultDiv.innerHTML = html;
+    resultDiv.classList.add("show");
+}
+</script>
+
+</body>
+</html>
