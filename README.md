@@ -33,10 +33,10 @@ my-join/
 
 将 GitHub Pages 绑定到自定义子域名：
 ```text
-https://scpmyjoin.laifan.dpdns.org/
+https://scpmyjoin.laifan.dpdns.org
 ```
 
---
+---
 
 ## 授权协议
 
