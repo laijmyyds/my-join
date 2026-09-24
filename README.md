@@ -9,10 +9,10 @@ SCP 谜异档案中文维基的入站答题系统。
 ## 项目结构
 
 my-join/
-├── CNAME --> 自定义域名配置
-├── README.md --> 本文件
-├── index.html --> 答题入口页面
-└── verify.html --> 暗号验证页面
+- CNAME --> 自定义域名配置
+- README.md --> 本文件
+- index.html --> 答题入口页面
+- verify.html --> 暗号验证页面
 
 
 ---
